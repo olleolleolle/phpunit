@@ -537,7 +537,7 @@ abstract class PHPUnit_Framework_TestCase extends PHPUnit_Framework_Assert imple
                     return;
                 } else {
                     if (isset($passed[$dependency])) {
-                        $this->dependencyInput[] = $passed[$dependency];
+                        $this->dependencyInput[] = $passed[$dependency]['result'];
                     } else {
                         $this->dependencyInput[] = NULL;
                     }
