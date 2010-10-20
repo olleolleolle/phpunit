@@ -537,7 +537,23 @@ abstract class PHPUnit_Framework_TestCase extends PHPUnit_Framework_Assert imple
                     return;
                 }
 
+                $size = PHPUnit_Util_Test::getSize(
+                  $className, $this->getName(FALSE)
+                );
+
                 if (isset($passed[$dependency])) {
+                    if ($passed[$dependency]['size'] > $size) {
+                        $result->addError(
+                          $this,
+                          new PHPUnit_Framework_SkippedTestError(
+                            'This test depends on a test that is larger than itself.'
+                          ),
+                          0
+                        );
+
+                        return;
+                    }
+
                     $this->dependencyInput[] = $passed[$dependency]['result'];
                 } else {
                     $this->dependencyInput[] = NULL;
