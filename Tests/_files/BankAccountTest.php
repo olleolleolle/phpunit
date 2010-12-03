@@ -35,102 +35,100 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package    PHPUnit
- * @subpackage Util
  * @author     Sebastian Bergmann <sebastian@phpunit.de>
  * @copyright  2002-2010 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link       http://www.phpunit.de/
- * @since      File available since Release 2.0.0
+ * @since      File available since Release 2.3.0
  */
 
+require_once 'PHPUnit/Framework/TestCase.php';
+require_once 'BankAccount.php';
+
 /**
- * Utility class for code filtering.
+ * Tests for the BankAccount class.
  *
  * @package    PHPUnit
- * @subpackage Util
  * @author     Sebastian Bergmann <sebastian@phpunit.de>
  * @copyright  2002-2010 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @version    Release: @package_version@
  * @link       http://www.phpunit.de/
- * @since      Class available since Release 2.0.0
+ * @since      Class available since Release 2.3.0
  */
-class PHPUnit_Util_Filter
+class BankAccountTest extends PHPUnit_Framework_TestCase
 {
-    /**
-     * Filters stack frames from PHPUnit classes.
-     *
-     * @param  Exception $e
-     * @param  boolean   $filterTests
-     * @param  boolean   $asString
-     * @return string
-     */
-    public static function getFilteredStacktrace(Exception $e, $filterTests = TRUE, $asString = TRUE)
+    protected $ba;
+
+    protected function setUp()
     {
-        if ($asString === TRUE) {
-            $filteredStacktrace = '';
-        } else {
-            $filteredStacktrace = array();
-        }
-
-        $groups = array('DEFAULT');
-
-        if (!defined('PHPUNIT_TESTSUITE')) {
-            $groups[] = 'PHPUNIT';
-        }
-
-        if ($filterTests) {
-            $groups[] = 'TESTS';
-        }
-
-        if ($e instanceof PHPUnit_Framework_SyntheticError) {
-            $eTrace = $e->getSyntheticTrace();
-        } else {
-            $eTrace = $e->getTrace();
-        }
-
-        if (!self::frameExists($eTrace, $e->getFile(), $e->getLine())) {
-            array_unshift(
-              $eTrace, array('file' => $e->getFile(), 'line' => $e->getLine())
-            );
-        }
-
-        foreach ($eTrace as $frame) {
-            if (isset($frame['file']) && is_file($frame['file']) &&
-                !PHP_CodeCoverage::getInstance()->filter()->isFiltered(
-                  $frame['file'], $groups, TRUE)) {
-                if ($asString === TRUE) {
-                    $filteredStacktrace .= sprintf(
-                      "%s:%s\n",
-
-                      $frame['file'],
-                      isset($frame['line']) ? $frame['line'] : '?'
-                    );
-                } else {
-                    $filteredStacktrace[] = $frame;
-                }
-            }
-        }
-
-        return $filteredStacktrace;
+        $this->ba = new BankAccount;
     }
 
     /**
-     * @param  array  $trace
-     * @param  string $file
-     * @param  int    $line
-     * @return boolean
-     * @since  Method available since Release 3.3.2
+     * @covers BankAccount::getBalance
+     * @group balanceIsInitiallyZero
+     * @group specification
      */
-    public static function frameExists(array $trace, $file, $line)
+    public function testBalanceIsInitiallyZero()
     {
-        foreach ($trace as $frame) {
-            if (isset($frame['file']) && $frame['file'] == $file &&
-                isset($frame['line']) && $frame['line'] == $line) {
-                return TRUE;
-            }
+        $this->assertEquals(0, $this->ba->getBalance());
+    }
+
+    /**
+     * @covers BankAccount::withdrawMoney
+     * @group balanceCannotBecomeNegative
+     * @group specification
+     */
+    public function testBalanceCannotBecomeNegative()
+    {
+        try {
+            $this->ba->withdrawMoney(1);
         }
 
-        return FALSE;
+        catch (BankAccountException $e) {
+            $this->assertEquals(0, $this->ba->getBalance());
+
+            return;
+        }
+
+        $this->fail();
     }
+
+    /**
+     * @covers BankAccount::depositMoney
+     * @group balanceCannotBecomeNegative
+     * @group specification
+     */
+    public function testBalanceCannotBecomeNegative2()
+    {
+        try {
+            $this->ba->depositMoney(-1);
+        }
+
+        catch (BankAccountException $e) {
+            $this->assertEquals(0, $this->ba->getBalance());
+
+            return;
+        }
+
+        $this->fail();
+    }
+
+    /**
+     * @covers BankAccount::getBalance
+     * @covers BankAccount::depositMoney
+     * @covers BankAccount::withdrawMoney
+     * @group balanceCannotBecomeNegative
+     */
+/*
+    public function testDepositingAndWithdrawingMoneyWorks()
+    {
+        $this->assertEquals(0, $this->ba->getBalance());
+        $this->ba->depositMoney(1);
+        $this->assertEquals(1, $this->ba->getBalance());
+        $this->ba->withdrawMoney(1);
+        $this->assertEquals(0, $this->ba->getBalance());
+    }
+*/
 }

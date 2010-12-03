@@ -35,102 +35,83 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package    PHPUnit
- * @subpackage Util
  * @author     Sebastian Bergmann <sebastian@phpunit.de>
  * @copyright  2002-2010 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link       http://www.phpunit.de/
- * @since      File available since Release 2.0.0
+ * @since      File available since Release 2.3.0
  */
 
+class BankAccountException extends RuntimeException {}
+
 /**
- * Utility class for code filtering.
+ * A bank account.
  *
  * @package    PHPUnit
- * @subpackage Util
  * @author     Sebastian Bergmann <sebastian@phpunit.de>
  * @copyright  2002-2010 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @version    Release: @package_version@
  * @link       http://www.phpunit.de/
- * @since      Class available since Release 2.0.0
+ * @since      Class available since Release 2.3.0
  */
-class PHPUnit_Util_Filter
+class BankAccount
 {
     /**
-     * Filters stack frames from PHPUnit classes.
+     * The bank account's balance.
      *
-     * @param  Exception $e
-     * @param  boolean   $filterTests
-     * @param  boolean   $asString
-     * @return string
+     * @var    float
      */
-    public static function getFilteredStacktrace(Exception $e, $filterTests = TRUE, $asString = TRUE)
+    protected $balance = 0;
+
+    /**
+     * Returns the bank account's balance.
+     *
+     * @return float
+     */
+    public function getBalance()
     {
-        if ($asString === TRUE) {
-            $filteredStacktrace = '';
-        } else {
-            $filteredStacktrace = array();
-        }
-
-        $groups = array('DEFAULT');
-
-        if (!defined('PHPUNIT_TESTSUITE')) {
-            $groups[] = 'PHPUNIT';
-        }
-
-        if ($filterTests) {
-            $groups[] = 'TESTS';
-        }
-
-        if ($e instanceof PHPUnit_Framework_SyntheticError) {
-            $eTrace = $e->getSyntheticTrace();
-        } else {
-            $eTrace = $e->getTrace();
-        }
-
-        if (!self::frameExists($eTrace, $e->getFile(), $e->getLine())) {
-            array_unshift(
-              $eTrace, array('file' => $e->getFile(), 'line' => $e->getLine())
-            );
-        }
-
-        foreach ($eTrace as $frame) {
-            if (isset($frame['file']) && is_file($frame['file']) &&
-                !PHP_CodeCoverage::getInstance()->filter()->isFiltered(
-                  $frame['file'], $groups, TRUE)) {
-                if ($asString === TRUE) {
-                    $filteredStacktrace .= sprintf(
-                      "%s:%s\n",
-
-                      $frame['file'],
-                      isset($frame['line']) ? $frame['line'] : '?'
-                    );
-                } else {
-                    $filteredStacktrace[] = $frame;
-                }
-            }
-        }
-
-        return $filteredStacktrace;
+        return $this->balance;
     }
 
     /**
-     * @param  array  $trace
-     * @param  string $file
-     * @param  int    $line
-     * @return boolean
-     * @since  Method available since Release 3.3.2
+     * Sets the bank account's balance.
+     *
+     * @param  float $balance
+     * @throws BankAccountException
      */
-    public static function frameExists(array $trace, $file, $line)
+    protected function setBalance($balance)
     {
-        foreach ($trace as $frame) {
-            if (isset($frame['file']) && $frame['file'] == $file &&
-                isset($frame['line']) && $frame['line'] == $line) {
-                return TRUE;
-            }
+        if ($balance >= 0) {
+            $this->balance = $balance;
+        } else {
+            throw new BankAccountException;
         }
+    }
 
-        return FALSE;
+    /**
+     * Deposits an amount of money to the bank account.
+     *
+     * @param  float $balance
+     * @throws BankAccountException
+     */
+    public function depositMoney($balance)
+    {
+        $this->setBalance($this->getBalance() + $balance);
+
+        return $this->getBalance();
+    }
+
+    /**
+     * Withdraws an amount of money from the bank account.
+     *
+     * @param  float $balance
+     * @throws BankAccountException
+     */
+    public function withdrawMoney($balance)
+    {
+        $this->setBalance($this->getBalance() - $balance);
+
+        return $this->getBalance();
     }
 }
